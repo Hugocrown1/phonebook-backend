@@ -1,0 +1,7 @@
+POST https://phonebook-backend-pied.vercel.app/api/persons
+Content-Type: application/json
+
+{
+    "name": "Cristiano Ronaldo",
+    "number": "6421343214"
+}
