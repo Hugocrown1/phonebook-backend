@@ -12,5 +12,14 @@
             "dest": "/"
             
         } 
-    ]
+    ],
+    "public": {
+        "rewrites": [
+          {
+            "source": "/(.*)",
+            "destination": "./build/(.*)" 
+          }
+        ]
+      }
+    
 }
