@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const Person = require('./models/person')
 
 app.use(express.static('build'))
 
@@ -16,35 +18,37 @@ morgan.token('body', function (req, res) { return JSON.stringify(req.body)})
 app.use(morgan(':method :url :status :res[content-length]  - :response-time ms :body' ))
 
 
-let persons = [
-    {
-        "name": "Arto Hellas",
-        "number": "040-123456",
-        "id": 1
-      },
-      {
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523",
-        "id": 2
-      },
-      {
-        "name": "Tito Titorras",
-        "number": "565876234523",
-        "id": 3
-      },
-      {
-        "name": "Hugo Corona",
-        "number": "646187812431",
-        "id": 4
-      }
-]
+// let persons = [
+//     {
+//         "name": "Arto Hellas",
+//         "number": "040-123456",
+//         "id": 1
+//       },
+//       {
+//         "name": "Ada Lovelace",
+//         "number": "39-44-5323523",
+//         "id": 2
+//       },
+//       {
+//         "name": "Tito Titorras",
+//         "number": "565876234523",
+//         "id": 3
+//       },
+//       {
+//         "name": "Hugo Corona",
+//         "number": "646187812431",
+//         "id": 4
+//       }
+// ]
 
 app.get('/', (request, response) => {
   response.send('<h1>Hello Amigos!</h1>')
 })
 
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then(people => {
+    response.json(people)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
@@ -78,25 +82,30 @@ const personExists = (personName) =>{
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
+  
    if(!body.name || !body.number){
     return response.status(400).json({
       error: 'content missing'
     })
    }
 
-   if(personExists(body.name)){
-    return response.status(400).json({
-      error: 'name must be unique'
-    })
-   }
+  //  if(personExists(body.name)){
+  //   return response.status(400).json({
+  //     error: 'name must be unique'
+  //   })
+  //  }
 
-   const person = {
+   const person = new Person({
     name: body.name,
     number: body.number,
-    id: generateId()
-   }
+    
+  })
 
-   persons = persons.concat(person)
+  person.save().then(result => {
+  
+    console.log(`added ${result.name} number ${result.number} to phonebook`)
+    
+  })
 
 
 
