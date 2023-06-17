@@ -51,34 +51,37 @@ app.get('/api/persons', (request, response) => {
   })
 })
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const note = persons.find(person => person.id === id)
-    if(note){
-        response.json(note)
-    }else{
-        response.status(404).end()
-    }  
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+  .then(person => {
+    if (person) {
+      response.json(person)
+    } else {
+      response.status(404).end()
+    }
+  })
+  .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(note => note.id !== id)
-  
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+  .then(result => {
     response.status(204).end()
+  })
+  .catch(error => next(error))
 })
 
-const generateId = () => {
-  const maxId = persons.length > 0
-    ? Math.max(...persons.map(p => p.id))
-    : 0
+// const generateId = () => {
+//   const maxId = persons.length > 0
+//     ? Math.max(...persons.map(p => p.id))
+//     : 0
 
-    return maxId + 1
-}
+//     return maxId + 1
+// }
 
-const personExists = (personName) =>{
-  return persons.some(person => person.name === personName)
-}
+// const personExists = (personName) =>{
+//   return persons.some(person => person.name === personName)
+// }
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
@@ -107,9 +110,22 @@ app.post('/api/persons', (request, response) => {
     
   })
 
-
-
   response.json(person)
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then(updatedPerson => {
+      response.json(updatedPerson)
+    })
+    .catch(error => next(error))
 })
 
 
@@ -119,6 +135,20 @@ app.get('/info', (request, response) => {
     response.send(`<h2>Phonebook has info for ${totalPeople} people <h2><br/><h2>${date}<h2>`)
     
 })
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+  console.log(error.name);
+  
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

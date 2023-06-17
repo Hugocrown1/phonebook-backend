@@ -1,0 +1,7 @@
+PUT http://localhost:3001/api/persons/648ccd7a35717683bf2ba07e
+Content-Type: application/json
+
+{
+    "name": "Kanye West",
+    "number": "666-1235122"
+}
