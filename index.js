@@ -17,30 +17,6 @@ morgan.token('body', function (req, res) { return JSON.stringify(req.body)})
 
 app.use(morgan(':method :url :status :res[content-length]  - :response-time ms :body' ))
 
-
-// let persons = [
-//     {
-//         "name": "Arto Hellas",
-//         "number": "040-123456",
-//         "id": 1
-//       },
-//       {
-//         "name": "Ada Lovelace",
-//         "number": "39-44-5323523",
-//         "id": 2
-//       },
-//       {
-//         "name": "Tito Titorras",
-//         "number": "565876234523",
-//         "id": 3
-//       },
-//       {
-//         "name": "Hugo Corona",
-//         "number": "646187812431",
-//         "id": 4
-//       }
-// ]
-
 app.get('/', (request, response) => {
   response.send('<h1>Hello Amigos!</h1>')
 })
@@ -71,26 +47,15 @@ app.delete('/api/persons/:id', (request, response, next) => {
   .catch(error => next(error))
 })
 
-// const generateId = () => {
-//   const maxId = persons.length > 0
-//     ? Math.max(...persons.map(p => p.id))
-//     : 0
 
-//     return maxId + 1
-// }
-
-// const personExists = (personName) =>{
-//   return persons.some(person => person.name === personName)
-// }
-
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
   
-   if(!body.name || !body.number){
-    return response.status(400).json({
-      error: 'content missing'
-    })
-   }
+  //  if(!body.name || !body.number){
+  //   return response.status(400).json({
+  //     error: 'content missing'
+  //   })
+  //  }
 
   //  if(personExists(body.name)){
   //   return response.status(400).json({
@@ -104,14 +69,20 @@ app.post('/api/persons', (request, response) => {
     
   })
 
-  person.save().then(result => {
+  person.save().then(savedPerson => {
   
-    console.log(`added ${result.name} number ${result.number} to phonebook`)
+    console.log(`added ${savedPerson.name} number ${savedPerson.number} to phonebook`)
+    return savedPerson.toJSON()
     
+  }).then(savedAndFormattedPerson => {
+    response.json(savedAndFormattedPerson)
   })
+  .catch(error => next(error))
 
-  response.json(person)
+  
 })
+
+
 
 app.put('/api/persons/:id', (request, response, next) => {
   const body = request.body
@@ -121,7 +92,9 @@ app.put('/api/persons/:id', (request, response, next) => {
     number: body.number,
   }
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true })
     .then(updatedPerson => {
       response.json(updatedPerson)
     })
@@ -143,7 +116,9 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
-  } 
+  } else if(error.name === 'ValidationError'){
+    return response.status(400).json({ error: error.message })
+  }
 
   next(error)
 }
